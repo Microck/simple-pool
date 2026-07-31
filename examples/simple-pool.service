@@ -1,0 +1,23 @@
+[Unit]
+Description=simple-pool sticky failover router
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 -m simple_pool /etc/simple-pool/config.yaml
+Restart=always
+RestartSec=2
+User=simple-pool
+Group=simple-pool
+WorkingDirectory=/var/lib/simple-pool
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/simple-pool
+
+# Load secrets from a drop-in environment file
+EnvironmentFile=-/etc/simple-pool/env
+
+[Install]
+WantedBy=multi-user.target

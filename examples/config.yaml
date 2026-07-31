@@ -1,0 +1,32 @@
+# simple-pool configuration example
+# Secrets use ${ENV_VAR} expansion -- never commit real keys.
+
+host: "127.0.0.1"
+port: 8000
+model: "my-model"
+request_timeout: 120
+cooldown: 1200
+state_path: ".simple-pool-state.json"
+
+# Optional: require a bearer token for incoming requests
+auth_token: "${SIMPLE_POOL_AUTH_TOKEN}"
+
+# Status codes that trigger backend cooldown
+failure_codes: [403, 408, 429, 500, 502, 503, 504]
+
+# Backends are tried in order. First available wins.
+backends:
+  - name: "primary-provider"
+    base_url: "https://api.example.com/v1"
+    api_key: "${PRIMARY_API_KEY}"
+    model: "gpt-4o"
+
+  - name: "fallback-provider"
+    base_url: "https://api.fallback.example.com/v1"
+    api_key: "${FALLBACK_API_KEY}"
+    model: "gpt-4o"
+
+  - name: "budget-provider"
+    base_url: "https://api.budget.example.com/v1"
+    api_key: "${BUDGET_API_KEY}"
+    model: "gpt-4o-mini"
