@@ -375,3 +375,32 @@ class TestLogSafety:
         assert "hunter2" not in raw_text
         assert loaded["backends"][0]["api_key"] == "hunter2"
         del os.environ["_SP_SECRET"]
+
+
+class TestStateWriteEfficiency:
+    def test_repeated_success_does_not_rewrite_unchanged_state(self, tmp_path):
+        state = PoolState(tmp_path / "state.json")
+        with patch.object(state, "_save", wraps=state._save) as save:
+            for _ in range(100):
+                state.mark_success("alpha", 0)
+            assert save.call_count == 1
+        assert PoolState(state.path).current_index == 0
+
+    def test_failed_save_is_retried_even_for_same_preferred_backend(self, tmp_path):
+        state = PoolState(tmp_path / "state.json")
+        with patch("simple_pool.state.os.replace", side_effect=OSError("synthetic failure")):
+            with pytest.raises(OSError):
+                state.mark_success("alpha", 1)
+        state.mark_success("alpha", 1)
+        assert PoolState(state.path).current_index == 1
+
+    @pytest.mark.parametrize(
+        "raw", ["null", "[]", '{"cooldowns": []}', '{"cooldowns": {"a": "NaN"}}']
+    )
+    def test_malformed_state_does_not_crash_or_poison_availability(self, tmp_path, raw):
+        path = tmp_path / "state.json"
+        path.write_text(raw)
+        state = PoolState(path)
+        assert state.current_index == 0
+        assert state.cooldowns == {}
+        assert path.read_text() == raw
