@@ -395,7 +395,16 @@ class TestStateWriteEfficiency:
         assert PoolState(state.path).current_index == 1
 
     @pytest.mark.parametrize(
-        "raw", ["null", "[]", '{"cooldowns": []}', '{"cooldowns": {"a": "NaN"}}']
+        "raw",
+        [
+            "null",
+            "[]",
+            '{"cooldowns": []}',
+            '{"cooldowns": false}',
+            '{"cooldowns": 0}',
+            '{"cooldowns": ""}',
+            '{"cooldowns": {"a": "NaN"}}',
+        ],
     )
     def test_malformed_state_does_not_crash_or_poison_availability(self, tmp_path, raw):
         path = tmp_path / "state.json"
@@ -404,3 +413,5 @@ class TestStateWriteEfficiency:
         assert state.current_index == 0
         assert state.cooldowns == {}
         assert path.read_text() == raw
+        state.mark_success("alpha", 0)
+        assert json.loads(path.read_text()) == {"current_index": 0, "cooldowns": {}}

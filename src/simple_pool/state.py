@@ -26,7 +26,9 @@ class PoolState:
             if not isinstance(data, dict):
                 return
             current_index = int(data.get("current_index", 0))
-            raw_cooldowns = data.get("cooldowns") or {}
+            raw_cooldowns = data.get("cooldowns")
+            if raw_cooldowns is None:
+                raw_cooldowns = {}
             if current_index < 0 or not isinstance(raw_cooldowns, dict):
                 return
             cooldowns = {str(k): float(v) for k, v in raw_cooldowns.items()}
