@@ -37,7 +37,14 @@ class PoolState:
             self.current_index = current_index
             self.cooldowns = cooldowns
             self._persisted = True
-        except (FileNotFoundError, OSError, ValueError, TypeError, json.JSONDecodeError):
+        except (
+            FileNotFoundError,
+            OSError,
+            ValueError,
+            TypeError,
+            OverflowError,
+            json.JSONDecodeError,
+        ):
             pass
 
     def _save(self) -> None:

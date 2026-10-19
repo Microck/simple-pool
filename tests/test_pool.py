@@ -397,6 +397,8 @@ class TestStateWriteEfficiency:
     @pytest.mark.parametrize(
         "raw",
         [
+            '{"current_index": 1e309}',
+            '{"cooldowns": {"a": ' + "9" * 400 + "}}",
             "null",
             "[]",
             '{"cooldowns": []}',
