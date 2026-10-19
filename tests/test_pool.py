@@ -409,6 +409,10 @@ class TestStateWriteEfficiency:
             '{"cooldowns": 0}',
             '{"cooldowns": ""}',
             '{"cooldowns": {"a": "NaN"}}',
+            '{"cooldowns": {"a": "5"}}',
+            '{"cooldowns": {"a": "1e3"}}',
+            '{"cooldowns": {"a": true}}',
+            '{"cooldowns": {"a": false}}',
         ],
     )
     def test_malformed_state_does_not_crash_or_poison_availability(self, tmp_path, raw):

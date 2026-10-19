@@ -33,6 +33,8 @@ class PoolState:
                 raw_cooldowns = {}
             if current_index < 0 or not isinstance(raw_cooldowns, dict):
                 return
+            if any(type(v) not in (int, float) for v in raw_cooldowns.values()):
+                return
             cooldowns = {str(k): float(v) for k, v in raw_cooldowns.items()}
             if any(not math.isfinite(v) or v < 0 for v in cooldowns.values()):
                 return
