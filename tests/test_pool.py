@@ -398,6 +398,9 @@ class TestStateWriteEfficiency:
         "raw",
         [
             '{"current_index": 1e309}',
+            '{"current_index": 1.9}',
+            '{"current_index": true}',
+            '{"current_index": "1"}',
             '{"cooldowns": {"a": ' + "9" * 400 + "}}",
             "null",
             "[]",

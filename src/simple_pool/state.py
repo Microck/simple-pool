@@ -25,7 +25,9 @@ class PoolState:
             data = json.loads(self.path.read_text(encoding="utf-8"))
             if not isinstance(data, dict):
                 return
-            current_index = int(data.get("current_index", 0))
+            current_index = data.get("current_index", 0)
+            if type(current_index) is not int:
+                return
             raw_cooldowns = data.get("cooldowns")
             if raw_cooldowns is None:
                 raw_cooldowns = {}
