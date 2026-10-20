@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import threading
 import time
@@ -14,6 +15,7 @@ class PoolState:
     def __init__(self, path: str | Path):
         self.path = Path(path)
         self._lock = threading.Lock()
+        self._persisted = False
         self.current_index: int = 0
         self.cooldowns: dict[str, float] = {}
         self._load()
@@ -21,22 +23,49 @@ class PoolState:
     def _load(self) -> None:
         try:
             data = json.loads(self.path.read_text(encoding="utf-8"))
-            self.current_index = int(data.get("current_index", 0))
-            self.cooldowns = {str(k): float(v) for k, v in (data.get("cooldowns") or {}).items()}
-        except (FileNotFoundError, OSError, ValueError, json.JSONDecodeError):
+            if not isinstance(data, dict):
+                return
+            current_index = data.get("current_index", 0)
+            if type(current_index) is not int:
+                return
+            raw_cooldowns = data.get("cooldowns")
+            if raw_cooldowns is None:
+                raw_cooldowns = {}
+            if current_index < 0 or not isinstance(raw_cooldowns, dict):
+                return
+            if any(type(v) not in (int, float) for v in raw_cooldowns.values()):
+                return
+            cooldowns = {str(k): float(v) for k, v in raw_cooldowns.items()}
+            if any(not math.isfinite(v) or v < 0 for v in cooldowns.values()):
+                return
+            self.current_index = current_index
+            self.cooldowns = cooldowns
+            self._persisted = True
+        except (
+            FileNotFoundError,
+            OSError,
+            ValueError,
+            TypeError,
+            OverflowError,
+            json.JSONDecodeError,
+        ):
             pass
 
     def _save(self) -> None:
+        self._persisted = False
         tmp = f"{self.path}.tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump({"current_index": self.current_index, "cooldowns": self.cooldowns}, f)
         os.replace(tmp, str(self.path))
+        self._persisted = True
 
     def mark_success(self, name: str, index: int) -> None:
         with self._lock:
+            changed = name in self.cooldowns or self.current_index != index
             self.cooldowns.pop(name, None)
             self.current_index = index
-            self._save()
+            if changed or not self._persisted:
+                self._save()
 
     def mark_failure(self, name: str, cooldown: float) -> None:
         with self._lock:

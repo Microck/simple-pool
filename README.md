@@ -133,3 +133,5 @@ ruff format --check src/ tests/
 ## license
 
 MIT
+
+The test suite includes real loopback HTTP journeys through the pool and two synthetic upstreams: failover, sticky routing, model overrides, response integrity, invalid JSON shapes, and negative request lengths. It never calls a model provider or uses real credentials. State regressions verify malformed-file recovery, retry after a failed atomic save, and avoiding unchanged disk writes on repeated successful requests. Browser automation is not used for this HTTP-only service.

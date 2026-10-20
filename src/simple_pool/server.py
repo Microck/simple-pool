@@ -58,8 +58,11 @@ class PoolHandler(BaseHTTPRequestHandler):
 
         try:
             length = int(self.headers.get("Content-Length", "0"))
+            if length < 0:
+                raise ValueError("negative Content-Length")
             body = self.rfile.read(length)
-            json.loads(body)
+            if not isinstance(json.loads(body), dict):
+                raise ValueError("request must be a JSON object")
         except (ValueError, json.JSONDecodeError):
             err = {"message": "invalid JSON request", "type": "invalid_request_error"}
             self._send_json(400, {"error": err})
